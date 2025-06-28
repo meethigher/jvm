@@ -1,0 +1,101 @@
+name: Build, Package, and Release Go Binaries
+
+on:
+  push:
+    tags:
+      - 'v*'  # 只有打 tag 的时候才触发（可改为 push/main 等）
+
+# 在push或者pull_request时触发
+# on:
+#   push:
+#     branches: [ "master" ]
+#   pull_request:
+#     branches: [ "master" ]
+
+jobs:
+  # 因为创建release是个一次性操作。如果放到steps里面，就会出现被创建多次，然后报错的问题。
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      # 创建 release
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release-${{ github.ref }}
+          draft: false
+          prerelease: false
+
+  # build依赖create-release
+  build:
+    needs: create-release
+    runs-on: ubuntu-latest
+
+    # 遍历 strategy.matrix 中的所有组合，这能让工作流针对矩阵里的每一种组合都执行一次 steps。
+    strategy:
+      matrix:
+        os: [ windows,linux,darwin ]       # 三个平台：Windows、Linux、macOS
+        arch: [ amd64,arm64 ]               # amd64、arm64 等架构
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.20.0' # 根据你的 Go 版本修改
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+        run: |
+          mkdir -p dist/
+          EXT=""
+          if [ "${GOOS}" = "windows" ]; then
+            EXT=".exe"
+          fi
+          echo "current GOOS: ${GOOS}"
+          echo "EXT: ${EXT}"
+          go build -o dist/http-kit_${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.arch }}${EXT} .
+          echo "$(ls dist)"
+      - name: Create zip file
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+        run: |
+          cd dist
+          EXT=""
+          if [ "${GOOS}" = "windows" ]; then
+            EXT=".exe"
+          fi
+          echo "current GOOS: ${GOOS}"
+          echo "EXT: ${EXT}"
+          zip -r http-kit_${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.arch }}.zip http-kit_${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.arch }}${EXT}
+          echo "$(ls)"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+        with:
+          name: http-kit_${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.arch }}
+          path: dist/http-kit_${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.arch }}.zip
+          retention-days: 1  # 设置保留 artifact 天数
+
+      # 上传附件到Release
+      - name: Upload zip files to Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for zip_file in dist/*.zip; do
+            asset_name=$(basename $zip_file)
+            gh release upload ${{ github.ref_name }} $zip_file --clobber
+          done
+
+
