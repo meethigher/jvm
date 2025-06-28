@@ -1,0 +1,29 @@
+{
+  "path": "D:\\3Develop\\Java\\jdk",
+  "version": [
+    {
+      "name": "8u242",
+      "path": "D:\\3Develop\\Java\\jdk1.8.0_242"
+    },
+    {
+      "name": "8u361",
+      "path": "D:\\3Develop\\Java\\jdk1.8.0_361"
+    },
+    {
+      "name": "11.0.15",
+      "path": "D:\\3Develop\\Java\\jdk11.0.15"
+    },
+    {
+      "name": "11.0.16",
+      "path": "D:\\3Develop\\Java\\graalvm-ce-java11"
+    },
+    {
+      "name": "17.0.4",
+      "path": "D:\\3Develop\\Java\\graalvm-ce-java17"
+    },
+    {
+      "name": "21.0.1",
+      "path": "D:\\3Develop\\Java\\jdk-21.0.1"
+    }
+  ]
+}
