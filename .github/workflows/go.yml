@@ -61,7 +61,7 @@ jobs:
           fi
           echo "current GOOS: ${GOOS}"
           echo "EXT: ${EXT}"
-          go build -o dist/http-kit_${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.arch }}${EXT} .
+          go build -o dist/jvm_${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.arch }}${EXT} .
           echo "$(ls dist)"
       - name: Create zip file
         env:
@@ -75,7 +75,7 @@ jobs:
           fi
           echo "current GOOS: ${GOOS}"
           echo "EXT: ${EXT}"
-          zip -r http-kit_${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.arch }}.zip http-kit_${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.arch }}${EXT}
+          zip -r jvm_${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.arch }}.zip jvm_${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.arch }}${EXT}
           echo "$(ls)"
 
       - name: Upload artifacts
@@ -84,8 +84,8 @@ jobs:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
         with:
-          name: http-kit_${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.arch }}
-          path: dist/http-kit_${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.arch }}.zip
+          name: jvm_${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.arch }}
+          path: dist/jvm_${{ github.ref_name }}_${{ matrix.os }}_${{ matrix.arch }}.zip
           retention-days: 1  # 设置保留 artifact 天数
 
       # 上传附件到Release
