@@ -24,7 +24,8 @@ type Config struct {
 }
 
 func parseConfig() (Config, error) {
-	data, err := os.ReadFile(configFileName)
+	path, _ := getExecutablePath(configFileName)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return Config{}, err
 	}
@@ -44,9 +45,21 @@ func help() {
 	os.Exit(1)
 }
 
+func getExecutablePath(name string) (string, error) {
+	// 获取可执行程序的全路径
+	exePath, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+	// 获取可执行程序所在的目录，并拼接指定的文件名
+	return filepath.Join(filepath.Dir(exePath), name), nil
+}
+
 func list(config Config) {
-	data, _ := os.ReadFile(current)
-	fmt.Printf("jvm versions:\n")
+	// 即使出错也不处理异常，只是影响内容展示而已
+	path, _ := getExecutablePath(current)
+	data, _ := os.ReadFile(path)
+	fmt.Println()
 	for _, v := range config.Version {
 		if data != nil && v.Name == string(data) {
 			fmt.Printf("* %s\n", v.Name)
@@ -90,7 +103,8 @@ func use(config Config, name string) error {
 	fmt.Printf("Switched\n")
 	fmt.Printf("Now using Java v%s\n", name)
 	// 0644表示文件所有者可读写，其他人只读
-	os.WriteFile(current, []byte(name), 0644)
+	path, _ := getExecutablePath(current)
+	os.WriteFile(path, []byte(name), 0644)
 	return nil
 }
 
